@@ -63,7 +63,7 @@ public class Monitor
 		while(true){ // Use while loop to continuously test my neighbors if i get notified 
 
 			/* Check if my neighbors are eating and I am hungry */
-			if(this.states[piTID-1] == STATUS.HUNGRY && this.states[(piTID-1)%this.numPhilosophers] != STATUS.EATING && this.states[(piTID-1)%this.numPhilosophers] != STATUS.EATING){
+			if(this.states[piTID-1] == STATUS.HUNGRY && this.states[(piTID-2 + this.numPhilosophers) % this.numPhilosophers] != STATUS.EATING && this.states[piTID % this.numPhilosophers] != STATUS.EATING){
 				this.states[piTID-1] = STATUS.EATING; // If i am hungry and my neighbors are not eating, then proceed to eat
 				break; 
 			}
