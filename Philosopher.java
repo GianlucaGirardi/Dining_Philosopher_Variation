@@ -110,14 +110,14 @@ public class Philosopher extends BaseThread
 			 * A decision is made at random whether this particular
 			 * philosopher is about to say something terribly useful.
 			 */
-			if(true == false)
+			if(Math.random() >= 0.5)
 			{
-				soMonitor.requestTalk();
+				DiningPhilosophers.soMonitor.requestTalk();
 				talk();
-				soMonitor.endTalk();
+				DiningPhilosophers.soMonitor.endTalk();
 			}
 
-				yield();
+				Thread.yield();
 		}
 	} // run()
 
@@ -144,4 +144,3 @@ public class Philosopher extends BaseThread
 	}
 }
 
-// EOF

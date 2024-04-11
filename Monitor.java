@@ -1,8 +1,4 @@
-import java.util.ArrayDeque;
-import java.util.LinkedList;
 import java.util.PriorityQueue;
-import java.util.Queue;
-import java.util.concurrent.locks.Condition;
 
 /**
  * Class Monitor
@@ -44,7 +40,7 @@ public class Monitor
 		this.talk = false;
 
 		/* Create Queue which will hold the philosopher that are waiting to eat */
-		hungryStatus = new PriorityQueue();
+		hungryStatus = new PriorityQueue<>();
 	}
 
 	/*
@@ -59,23 +55,25 @@ public class Monitor
 	 */
 	public synchronized void pickUp(final int piTID)
 	{
-		/* Get my position in the States array */
-		int myPosition = piTID-1;
-
 		/* I am hungry, put me in the hungry queue */
-		states[myPosition] = STATUS.HUNGRY;
+		states[piTID-1] = STATUS.HUNGRY;
 		this.hungryStatus.add(piTID);
 
 		/* Test myself and my neighbors */
 		while(true){ // Use while loop to continuously test my neighbors if i get notified 
 
 			/* Check if my neighbors are eating and I am hungry */
-			if(states[myPosition] == STATUS.HUNGRY && states[(myPosition-1)%numPhilosophers] != STATUS.EATING && states[(myPosition+1)%numPhilosophers] != STATUS.EATING){
-				states[myPosition] = STATUS.EATING; // If i am hungry and my neighbors are not eating, then proceed to eat
+			if(this.states[piTID-1] == STATUS.HUNGRY && this.states[(piTID-1)%this.numPhilosophers] != STATUS.EATING && this.states[(piTID-1)%this.numPhilosophers] != STATUS.EATING){
+				this.states[piTID-1] = STATUS.EATING; // If i am hungry and my neighbors are not eating, then proceed to eat
 				break; 
 			}
 			else{
-				this.wait(); // Put this thread into a waiting state till it is notified
+				try {
+					this.wait();
+				} catch (InterruptedException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				} // Put this thread into a waiting state till it is notified
 			}
 		}
 		
@@ -91,11 +89,8 @@ public class Monitor
 	 */
 	public synchronized void putDown(final int piTID)
 	{
-		/* Find my position */
-		int myPosition = piTID-1;
-
 		/* I am done EATING */
-		states[myPosition] = STATUS.THINKING;
+		states[piTID-1] = STATUS.THINKING;
 
 		/* Notify everbody else that I am done EATING, this will wake up all other threads which will give them the chance to recheck their conditions if they are picked back up by the CPU */
 		this.notifyAll();
@@ -110,7 +105,12 @@ public class Monitor
 		/* Check if someone is talking */
 		while(true){ // Once a philosopher is notified that their are done talking and i get picked back up, i might need to recheck the conditions to see if i can proceed to talk
 			if(this.talk == true){
-				wait(); // If someone else is talking, i need to wait
+				try {
+					this.wait();
+				} catch (InterruptedException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				} // If someone else is talking, i need to wait
 			}
 			else{
 				break; // If no one is talking, i can proceed to talk
@@ -132,4 +132,3 @@ public class Monitor
 	}
 }
 
-// EOF
