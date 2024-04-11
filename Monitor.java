@@ -1,3 +1,9 @@
+import java.util.ArrayDeque;
+import java.util.LinkedList;
+import java.util.PriorityQueue;
+import java.util.Queue;
+import java.util.concurrent.locks.Condition;
+
 /**
  * Class Monitor
  * To synchronize dining philosophers.
@@ -12,13 +18,33 @@ public class Monitor
 	 * ------------
 	 */
 
+	 /* NOTE: Wait() will be applied on all philosophers that are waiting to eat OR talk && NotifyAll() will notify all the waiting philosophers who will need to recheck their conditions
+	  * This being said, the waiting philosophers will be a mixed group (Those who waiting to eat and those who waiting to talk) and notifyAll will desuspend all of them (regardless of what they are waiting to do)
+	  */
+	private int numPhilosophers;
+	private enum STATUS {THINKING, HUNGRY, EATING}; // Status will indicated the current state of the philosopher in question, each index corresponds to the philospher in question
+	private STATUS[] states; // Array holding the states of all the philosophers
+	private PriorityQueue<Integer> hungryStatus; // Array holding philosophers who's status is HUNGRY
+	private boolean talk;
 
 	/**
 	 * Constructor
 	 */
 	public Monitor(int piNumberOfPhilosophers)
-	{
-		// TODO: set appropriate number of chopsticks based on the # of philosophers
+	{	
+		/* Create the system (Table) */
+		this.numPhilosophers = piNumberOfPhilosophers;
+		states = new STATUS[piNumberOfPhilosophers];
+
+		/* Set the default state of the system (Table) */
+		for(int i=0; i < piNumberOfPhilosophers; i++){
+			states[i] = STATUS.THINKING;
+		}
+
+		this.talk = false;
+
+		/* Create Queue which will hold the philosopher that are waiting to eat */
+		hungryStatus = new PriorityQueue();
 	}
 
 	/*
@@ -33,8 +59,31 @@ public class Monitor
 	 */
 	public synchronized void pickUp(final int piTID)
 	{
-		// ...
+		/* Get my position in the States array */
+		int myPosition = piTID-1;
+
+		/* I am hungry, put me in the hungry queue */
+		states[myPosition] = STATUS.HUNGRY;
+		this.hungryStatus.add(piTID);
+
+		/* Test myself and my neighbors */
+		while(true){ // Use while loop to continuously test my neighbors if i get notified 
+
+			/* Check if my neighbors are eating and I am hungry */
+			if(states[myPosition] == STATUS.HUNGRY && states[(myPosition-1)%numPhilosophers] != STATUS.EATING && states[(myPosition+1)%numPhilosophers] != STATUS.EATING){
+				states[myPosition] = STATUS.EATING; // If i am hungry and my neighbors are not eating, then proceed to eat
+				break; 
+			}
+			else{
+				this.wait(); // Put this thread into a waiting state till it is notified
+			}
+		}
+		
+		/* I can eat, remove me from the queue */
+		this.hungryStatus.remove();
+
 	}
+
 
 	/**
 	 * When a given philosopher's done eating, they put the chopstiks/forks down
@@ -42,7 +91,14 @@ public class Monitor
 	 */
 	public synchronized void putDown(final int piTID)
 	{
-		// ...
+		/* Find my position */
+		int myPosition = piTID-1;
+
+		/* I am done EATING */
+		states[myPosition] = STATUS.THINKING;
+
+		/* Notify everbody else that I am done EATING, this will wake up all other threads which will give them the chance to recheck their conditions if they are picked back up by the CPU */
+		this.notifyAll();
 	}
 
 	/**
@@ -51,7 +107,16 @@ public class Monitor
 	 */
 	public synchronized void requestTalk()
 	{
-		// ...
+		/* Check if someone is talking */
+		while(true){ // Once a philosopher is notified that their are done talking and i get picked back up, i might need to recheck the conditions to see if i can proceed to talk
+			if(this.talk == true){
+				wait(); // If someone else is talking, i need to wait
+			}
+			else{
+				break; // If no one is talking, i can proceed to talk
+			}
+		}
+		this.talk = true;
 	}
 
 	/**
@@ -60,7 +125,10 @@ public class Monitor
 	 */
 	public synchronized void endTalk()
 	{
-		// ...
+		/* I am done talking, let everbody know  */
+		this.talk = false;
+		this.notifyAll();
+
 	}
 }
 

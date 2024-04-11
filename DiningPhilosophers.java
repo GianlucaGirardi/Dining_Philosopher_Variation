@@ -46,22 +46,22 @@ public class DiningPhilosophers
 			 * Should be settable from the command line
 			 * or the default if no arguments supplied.
 			 */
-			int iPhilosophers = DEFAULT_NUMBER_OF_PHILOSOPHERS;
+			int iPhilosophers = DEFAULT_NUMBER_OF_PHILOSOPHERS; // Provides a default number of philosphers
 
 			// Make the monitor aware of how many philosophers there are
-			soMonitor = new Monitor(iPhilosophers);
+			soMonitor = new Monitor(iPhilosophers); // Creates a Monitor Object that will set the proper number of chopsticks
 
 			// Space for all the philosophers
-			Philosopher aoPhilosophers[] = new Philosopher[iPhilosophers];
+			Philosopher aoPhilosophers[] = new Philosopher[iPhilosophers]; // Array that will hold all the created philosophers
 
 			// Let 'em sit down
-			for(int j = 0; j < iPhilosophers; j++)
+			for(int j = 0; j < iPhilosophers; j++) // For all spaces in the array, fill it with a philosopher thread
 			{
 				aoPhilosophers[j] = new Philosopher();
 				aoPhilosophers[j].start();
 			}
 
-			System.out.println
+			System.out.println // Display number of created philosophers
 			(
 				iPhilosophers +
 				" philosopher(s) came in for a dinner."
